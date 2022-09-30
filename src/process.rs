@@ -23,7 +23,7 @@ use windows::{
 
 #[derive(Debug)]
 pub struct IsolatedProcess {
-    // TODO
+    // TODO: Figure out which fields are needed.
     startup_info: STARTUPINFOEXW,
     process_info: PROCESS_INFORMATION,
     security_capabilities: SECURITY_CAPABILITIES,
