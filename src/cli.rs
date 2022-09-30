@@ -1,4 +1,3 @@
-use crate::wide_string::WideString;
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -6,7 +5,7 @@ use clap::Parser;
 pub struct Cli {
     /// The name of the app container.
     #[clap(short, long)]
-    pub container_name: WideString,
+    pub container_name: String,
 
     /// The name of the module to be executed.
     #[clap(short, long)]

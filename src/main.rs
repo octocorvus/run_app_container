@@ -21,22 +21,21 @@ fn main() {
     //let container_name = prefix + "." + &suffix;
     let container_name = cli.container_name;
 
-    let app_container_profile =
-        match AppContainerProfile::new(&container_name, &container_name, &container_name) {
-            Ok(profile) => profile,
-            Err(error) => {
-                log::warn!("Failed to create AppContainerProfile: {}", error);
-                log::info!("Trying to get existing AppContainerProfile");
-                match AppContainerProfile::derive_from_name(&container_name) {
-                    Ok(profile) => profile,
-                    Err(error) => {
-                        log::error!("Failed to get existing AppContainerProfile: {}", error);
-                        return;
-                    }
+    let app_container_profile = match AppContainerProfile::new(&container_name) {
+        Ok(profile) => profile,
+        Err(error) => {
+            log::warn!("Failed to create AppContainerProfile: {}", error);
+            log::info!("Trying to get existing AppContainerProfile");
+            match AppContainerProfile::derive_from_name(&container_name) {
+                Ok(profile) => profile,
+                Err(error) => {
+                    log::error!("Failed to get existing AppContainerProfile: {}", error);
+                    return;
                 }
             }
-        };
-    log::debug!("AppContainer SID is {:?}", app_container_profile.sid);
+        }
+    };
+    log::debug!("{:?}", app_container_profile);
 
     // TODO: Set appropriate permissions before launch.
 

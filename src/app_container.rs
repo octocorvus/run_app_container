@@ -1,5 +1,5 @@
 use crate::wide_string::WideString;
-use std::any::type_name;
+use std::ptr::null_mut;
 use windows::{
     core::PCWSTR,
     Win32::{
@@ -11,36 +11,30 @@ use windows::{
     },
 };
 
+#[derive(Debug)]
 pub struct AppContainerProfile {
     pub container_name: WideString,
     pub sid: PSID,
 }
 
 impl AppContainerProfile {
-    pub fn new(
-        container_name: &WideString,
-        display_name: &WideString,
-        description: &WideString,
-    ) -> Result<Self, windows::core::Error> {
-        log::debug!(
-            "{}: AppContainer information: name: {}, display name: {}, description: {}",
-            type_name::<Self>(),
-            container_name,
-            display_name,
-            description
-        );
+    pub fn new(container_name: &str) -> Result<Self, windows::core::Error> {
+        let mut profile = Self {
+            container_name: WideString::from(container_name),
+            sid: PSID(null_mut()),
+        };
         match unsafe {
             CreateAppContainerProfile(
-                PCWSTR::from(container_name),
-                PCWSTR::from(display_name),
-                PCWSTR::from(description),
+                PCWSTR::from(&profile.container_name),
+                PCWSTR::from(&profile.container_name),
+                PCWSTR::from(&profile.container_name),
                 &[],
             )
         } {
-            Ok(sid) => Ok(Self {
-                container_name: container_name.to_owned(),
-                sid,
-            }),
+            Ok(sid) => {
+                profile.sid = sid;
+                Ok(profile)
+            }
             Err(error) => Err(error),
         }
     }
@@ -49,12 +43,18 @@ impl AppContainerProfile {
         unsafe { DeleteAppContainerProfile(PCWSTR::from(&self.container_name)) }
     }
 
-    pub fn derive_from_name(container_name: &WideString) -> Result<Self, windows::core::Error> {
-        match unsafe { DeriveAppContainerSidFromAppContainerName(PCWSTR::from(container_name)) } {
-            Ok(sid) => Ok(Self {
-                container_name: container_name.to_owned(),
-                sid,
-            }),
+    pub fn derive_from_name(container_name: &str) -> Result<Self, windows::core::Error> {
+        let mut profile = Self {
+            container_name: WideString::from(container_name),
+            sid: PSID(null_mut()),
+        };
+        match unsafe {
+            DeriveAppContainerSidFromAppContainerName(PCWSTR::from(&profile.container_name))
+        } {
+            Ok(sid) => {
+                profile.sid = sid;
+                Ok(profile)
+            }
             Err(error) => Err(error),
         }
     }
