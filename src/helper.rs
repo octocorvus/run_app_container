@@ -1,9 +1,6 @@
 use crate::wide_string::WideString;
-use rand::distributions::Alphanumeric;
-use rand::thread_rng;
-use rand::Rng;
-use std::borrow::Cow;
-use std::ops::AddAssign;
+use rand::{distributions::Alphanumeric, thread_rng, Rng};
+use std::{borrow::Cow, ops::AddAssign};
 use windows::{
     core::{PCWSTR, PWSTR},
     Win32::Foundation::GetLastError,
