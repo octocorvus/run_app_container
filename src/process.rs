@@ -28,6 +28,8 @@ pub struct IsolatedProcess {
     process_info: PROCESS_INFORMATION,
     security_capabilities: SECURITY_CAPABILITIES,
     attribute_list_buffer: Vec<u8>,
+    application_name: WideString,
+    command_line: WideString,
 }
 
 impl IsolatedProcess {
@@ -42,20 +44,28 @@ impl IsolatedProcess {
             process_info: PROCESS_INFORMATION::default(),
             security_capabilities: SECURITY_CAPABILITIES::default(),
             attribute_list_buffer: vec![0_u8; attribute_list_size],
+            application_name: WideString::from(executable_path),
+            command_line: get_command_line(executable_path, arguments),
         };
+
+        log::debug!(
+            "{}: executable path: `{}`",
+            type_name::<Self>(),
+            process.application_name
+        );
+        log::debug!(
+            "{}: command line: `{}`",
+            type_name::<Self>(),
+            process.command_line
+        );
 
         process.startup_info.StartupInfo.cb = mem::size_of::<STARTUPINFOEXW>() as u32;
         process.security_capabilities.AppContainerSid = app_container_profile.sid;
         process.initialise_attribute_list(&mut attribute_list_size)?;
         process.add_security_capabilities_to_attributes()?;
 
-        let exe_path = WideString::from(executable_path);
-        let mut command_line = get_command_line(executable_path, arguments);
-        log::debug!("{}: executable path: `{}`", type_name::<Self>(), exe_path);
-        log::debug!("{}: command line: `{}`", type_name::<Self>(), command_line);
-
         // TODO: Launch the process in a job
-        process.launch(PCWSTR::from(&exe_path), PWSTR::from(&mut command_line))?;
+        process.launch()?;
 
         Ok(process)
     }
@@ -125,15 +135,11 @@ impl IsolatedProcess {
         }
     }
 
-    fn launch(
-        &mut self,
-        application_name: PCWSTR,
-        command_line: PWSTR,
-    ) -> Result<(), windows::core::Error> {
+    fn launch(&mut self) -> Result<(), windows::core::Error> {
         let success = unsafe {
             CreateProcessW(
-                application_name,
-                command_line,
+                PCWSTR::from(&self.application_name),
+                PWSTR::from(&mut self.command_line),
                 null(),
                 null(),
                 false,
