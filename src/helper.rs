@@ -1,6 +1,6 @@
 use crate::wide_string::WideString;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
-use std::{borrow::Cow, ops::AddAssign};
+use std::borrow::Cow;
 use windows::{
     core::{PCWSTR, PWSTR},
     Win32::Foundation::GetLastError,
@@ -34,16 +34,13 @@ pub fn get_last_error() -> windows::core::Error {
     windows::core::Error::new(error, error.message())
 }
 
-pub fn parse_command_line(command_line: &[String]) -> WideString {
-    let mut parsed_command_line = String::new();
-    command_line
-        .iter()
-        .fold(&mut parsed_command_line, |accumulation, term| {
-            accumulation.add_assign(&quote(term));
-            accumulation.add_assign(" ");
-            accumulation
-        });
-    WideString::from(&parsed_command_line)
+pub fn get_command_line(executable_path: &String, arguments: &[String]) -> WideString {
+    let mut command_line = String::from(&quote(executable_path) as &str);
+    for argument in arguments {
+        command_line += " ";
+        command_line += &quote(&argument);
+    }
+    WideString::from(&command_line)
 }
 
 pub fn quote(string: &str) -> Cow<str> {

@@ -1,6 +1,6 @@
 use crate::{
     app_container::AppContainerProfile,
-    helper::{get_last_error, parse_command_line, quote},
+    helper::{get_command_line, get_last_error},
     wide_string::WideString,
 };
 use std::{
@@ -49,25 +49,13 @@ impl IsolatedProcess {
         process.initialise_attribute_list(&mut attribute_list_size)?;
         process.add_security_capabilities_to_attributes()?;
 
-        let mut parsed_arguments = WideString::from(&quote(&executable_path) as &str);
-        let mut command_line = PWSTR::null();
-        if !arguments.is_empty() {
-            let args = parse_command_line(&arguments);
-            if !args.is_empty() {
-                parsed_arguments += &WideString::from(" ");
-                parsed_arguments += &args;
-            }
-            log::debug!(
-                "{}: parsed arguments: {}",
-                type_name::<Self>(),
-                parsed_arguments
-            );
-            command_line = PWSTR::from(&mut parsed_arguments);
-        }
         let exe_path = WideString::from(executable_path);
+        let mut command_line = get_command_line(executable_path, arguments);
+        log::debug!("{}: executable path: `{}`", type_name::<Self>(), exe_path);
+        log::debug!("{}: command line: `{}`", type_name::<Self>(), command_line);
 
         // TODO: Launch the process in a job
-        process.launch(PCWSTR::from(&exe_path), command_line)?;
+        process.launch(PCWSTR::from(&exe_path), PWSTR::from(&mut command_line))?;
 
         Ok(process)
     }
