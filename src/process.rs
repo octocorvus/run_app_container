@@ -38,12 +38,11 @@ impl IsolatedProcess {
         arguments: &[String],
         app_container_profile: AppContainerProfile,
     ) -> Result<Self, windows::core::Error> {
-        let mut attribute_list_size = Self::get_attribute_list_size();
         let mut process = IsolatedProcess {
             startup_info: STARTUPINFOEXW::default(),
             process_info: PROCESS_INFORMATION::default(),
             security_capabilities: SECURITY_CAPABILITIES::default(),
-            attribute_list_buffer: vec![0_u8; attribute_list_size],
+            attribute_list_buffer: vec![0_u8; Self::get_attribute_list_size()],
             application_name: WideString::from(executable_path),
             command_line: get_command_line(executable_path, arguments),
         };
@@ -61,7 +60,7 @@ impl IsolatedProcess {
 
         process.startup_info.StartupInfo.cb = mem::size_of::<STARTUPINFOEXW>() as u32;
         process.security_capabilities.AppContainerSid = app_container_profile.sid;
-        process.initialise_attribute_list(&mut attribute_list_size)?;
+        process.initialise_attribute_list()?;
         process.add_security_capabilities_to_attributes()?;
 
         // TODO: Launch the process in a job
@@ -83,10 +82,8 @@ impl IsolatedProcess {
         attribute_list_size
     }
 
-    fn initialise_attribute_list(
-        &mut self,
-        attribute_list_size: &mut usize,
-    ) -> Result<(), windows::core::Error> {
+    fn initialise_attribute_list(&mut self) -> Result<(), windows::core::Error> {
+        let mut attribute_list_size = self.attribute_list_buffer.len();
         log::debug!(
             "{}: attribute list size is: {:?}",
             type_name::<Self>(),
@@ -99,7 +96,7 @@ impl IsolatedProcess {
                 self.startup_info.lpAttributeList,
                 1,
                 0,
-                attribute_list_size,
+                &mut attribute_list_size,
             )
         };
         if success.as_bool() {
