@@ -12,7 +12,7 @@ pub struct Cli {
     pub application_name: String,
 
     /// The command line to be executed (make sure this is the last argument).
-    #[clap(short = 'l', long, multiple_values = true, allow_hyphen_values = true)]
+    #[clap(short = 'l', long, num_args = 0.., allow_hyphen_values = true)]
     pub command_line: Vec<String>,
 
     /// Turn debugging information on.

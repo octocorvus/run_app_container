@@ -7,7 +7,7 @@ use std::{
     any::type_name,
     mem,
     os::raw::c_void,
-    ptr::{null, null_mut},
+    ptr::null_mut,
 };
 use windows::{
     core::{PCWSTR, PWSTR},
@@ -119,10 +119,10 @@ impl IsolatedProcess {
                 PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES
                     .try_into()
                     .unwrap(),
-                &self.security_capabilities as *const _ as *const c_void,
+                Some(&self.security_capabilities as *const _ as *const c_void),
                 mem::size_of::<SECURITY_CAPABILITIES>(),
-                null_mut(),
-                null(),
+                None,
+                None,
             )
         };
         if success.as_bool() {
@@ -137,11 +137,11 @@ impl IsolatedProcess {
             CreateProcessW(
                 PCWSTR::from(&self.application_name),
                 PWSTR::from(&mut self.command_line),
-                null(),
-                null(),
+                None,
+                None,
                 false,
                 EXTENDED_STARTUPINFO_PRESENT,
-                null(),
+                None,
                 PCWSTR::null(),
                 &self.startup_info.StartupInfo,
                 &mut self.process_info,

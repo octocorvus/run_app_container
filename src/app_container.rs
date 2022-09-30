@@ -28,7 +28,7 @@ impl AppContainerProfile {
                 PCWSTR::from(&profile.container_name),
                 PCWSTR::from(&profile.container_name),
                 PCWSTR::from(&profile.container_name),
-                &[],
+                None,
             )
         } {
             Ok(sid) => {
