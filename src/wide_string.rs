@@ -3,6 +3,7 @@ use std::{
     fmt,
     ops::{Add, AddAssign},
     str::FromStr,
+    string::FromUtf16Error,
 };
 
 /// Null terminated UTF-16 string.
@@ -47,9 +48,17 @@ impl From<&String> for Utf16String {
     }
 }
 
+impl TryFrom<&Utf16String> for String {
+    type Error = FromUtf16Error;
+
+    fn try_from(value: &Utf16String) -> Result<Self, Self::Error> {
+        String::from_utf16(&value.bytes[..value.bytes.len() - 1])
+    }
+}
+
 impl fmt::Display for Utf16String {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> fmt::Result {
-        match String::from_utf16(&self.bytes[..self.len()]) {
+        match String::try_from(self) {
             Ok(utf8_str) => {
                 write!(f, "{}", utf8_str)?;
                 Ok(())
