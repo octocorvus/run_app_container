@@ -32,7 +32,7 @@ elseif ($DebugPreference -eq [System.Management.Automation.ActionPreference]::Co
 }
 if ($Arguments.Count -ne 0) {
     $commandLine += "--command-line"
-    $commandLine += $Arguments
+    $commandLine += $Arguments | ForEach-Object { $_.Replace("`"", "\`"") }
 }
 
 & $exePath $commandLine
